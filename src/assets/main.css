@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Alte Haas Grotesk — tipografía de marca (autohospedada, © Yann Le Coroller,
+   licencia libre). Solo existen Regular y Bold: los rangos de peso mapean
+   medium→Regular y semibold/bold→Bold sin sintetizar. */
+@font-face {
+  font-family: 'Alte Haas Grotesk';
+  src: url('/fonts/AlteHaasGroteskRegular.ttf') format('truetype');
+  font-weight: 100 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Alte Haas Grotesk';
+  src: url('/fonts/AlteHaasGroteskBold.ttf') format('truetype');
+  font-weight: 600 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer base {
+  html,
+  body {
+    @apply bg-black text-white;
+  }
+
+  body {
+    @apply font-grotesk antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display;
+  }
+
+  ::selection {
+    background-color: rgba(201, 208, 214, 0.25); /* silver Ice Palace */
+    color: #ffffff;
+  }
+
+  /* Navegación por teclado: anillo plateado fino, visible solo con teclado */
+  :focus-visible {
+    outline: 1px solid rgba(201, 208, 214, 0.7);
+    outline-offset: 2px;
+  }
+}
+
+/* v-reveal: fade-up al entrar al viewport (ver directiva en main.js) */
+.reveal-hidden {
+  opacity: 0;
+  transform: translateY(18px);
+}
+
+.reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 700ms ease-out,
+    transform 700ms ease-out;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.scroll-line {
+  transform-origin: top;
+  animation: scroll-hint 2.4s ease-in-out infinite;
+}
+
+@keyframes scroll-hint {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-line {
+    animation: none;
+  }
+}
