@@ -27,6 +27,36 @@
   font-display: swap;
 }
 
+/* Cormorant Garamond — acento editorial serif. Autohospedada (subset latino,
+   solo los pesos que el sitio realmente usa: 500 y 600) en lugar de la hoja
+   de Google Fonts, que bloqueaba el primer render ~970ms con una cadena
+   DNS + TLS + CSS + fuente contra un tercero. */
+@font-face {
+  font-family: 'Cormorant Garamond';
+  src: url('/fonts/CormorantGaramond-Medium.woff2') format('woff2');
+  font-weight: 400 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Cormorant Garamond';
+  src: url('/fonts/CormorantGaramond-SemiBold.woff2') format('woff2');
+  font-weight: 600 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* JetBrains Mono — solo datos técnicos (guías de rastreo, nº de orden).
+   No aparece en la tienda: únicamente en /admin y la confirmación. */
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/JetBrainsMono-Regular.woff2') format('woff2');
+  font-weight: 400 600;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
   html,
   body {

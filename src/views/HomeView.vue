@@ -413,6 +413,8 @@ onBeforeUnmount(() => {
         >
           <img
             src="https://ffurplzqeldxzeheetgg.supabase.co/storage/v1/object/public/products/covers/new-arrival-2.webp"
+            srcset="https://ffurplzqeldxzeheetgg.supabase.co/storage/v1/object/public/products/covers/new-arrival-2-sm.webp 1024w, https://ffurplzqeldxzeheetgg.supabase.co/storage/v1/object/public/products/covers/new-arrival-2.webp 1600w"
+            sizes="100vw"
             alt="New Arrival"
             loading="eager"
             fetchpriority="high"
@@ -439,6 +441,8 @@ onBeforeUnmount(() => {
           >
             <img
               src="https://ffurplzqeldxzeheetgg.supabase.co/storage/v1/object/public/products/covers/men.webp"
+            srcset="https://ffurplzqeldxzeheetgg.supabase.co/storage/v1/object/public/products/covers/men-sm.webp 1024w, https://ffurplzqeldxzeheetgg.supabase.co/storage/v1/object/public/products/covers/men.webp 1600w"
+            sizes="(max-width: 767px) 100vw, 50vw"
               alt="Men"
               loading="lazy"
               decoding="async"
@@ -460,6 +464,8 @@ onBeforeUnmount(() => {
           >
             <img
               src="https://ffurplzqeldxzeheetgg.supabase.co/storage/v1/object/public/products/covers/women.webp"
+            srcset="https://ffurplzqeldxzeheetgg.supabase.co/storage/v1/object/public/products/covers/women-sm.webp 1024w, https://ffurplzqeldxzeheetgg.supabase.co/storage/v1/object/public/products/covers/women.webp 1600w"
+            sizes="(max-width: 767px) 100vw, 50vw"
               alt="Women"
               loading="lazy"
               decoding="async"
@@ -483,6 +489,8 @@ onBeforeUnmount(() => {
         >
           <img
             src="https://ffurplzqeldxzeheetgg.supabase.co/storage/v1/object/public/products/covers/tailoring.webp"
+            srcset="https://ffurplzqeldxzeheetgg.supabase.co/storage/v1/object/public/products/covers/tailoring-sm.webp 1024w, https://ffurplzqeldxzeheetgg.supabase.co/storage/v1/object/public/products/covers/tailoring.webp 1600w"
+            sizes="100vw"
             alt="Tailoring & Accessories"
             loading="lazy"
             decoding="async"
@@ -550,26 +558,29 @@ onBeforeUnmount(() => {
    en piezas grandes; letter-spacing únicamente en tagline y máscara.
    ========================================================================== */
 
-/* --- 1. Overlay: el wordmark como ventana --- */
+/* --- 1. Overlay: el wordmark como ventana ---
+   El tracking es fijo (0.1em, el mismo del app shell en index.html): así el
+   relevo shell → Vue es del mismo tamaño exacto y el LCP no "se muda" a un
+   elemento posterior. La respiración vive solo en scale(), que compone en
+   GPU — animar letter-spacing aquí relayouteaba un texto a pantalla completa
+   en cada frame durante 1s. */
 .monolith-text {
   font-family: 'Alte Haas Grotesk', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-weight: 400;
   font-size: clamp(3.25rem, 10.5vw, 10rem);
-  letter-spacing: 0.01em;
+  letter-spacing: 0.1em;
   transform-box: fill-box;
   transform-origin: center;
   animation: monolith-breathe 1s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
-/* Respiración de apertura: entra levemente contraída y abre su tracking */
+/* Respiración de apertura: entra levemente contraída y se asienta */
 @keyframes monolith-breathe {
   from {
     transform: scale(0.94);
-    letter-spacing: 0.01em;
   }
   to {
     transform: scale(1);
-    letter-spacing: 0.1em;
   }
 }
 
@@ -577,10 +588,7 @@ onBeforeUnmount(() => {
 .monolith-dissolving .monolith-text {
   animation: none;
   transform: scale(14);
-  letter-spacing: 0.02em;
-  transition:
-    transform 1s cubic-bezier(0.7, 0, 0.3, 1),
-    letter-spacing 1s cubic-bezier(0.7, 0, 0.3, 1);
+  transition: transform 1s cubic-bezier(0.7, 0, 0.3, 1);
 }
 
 .monolith-plate {
@@ -705,9 +713,12 @@ onBeforeUnmount(() => {
   }
 }
 
+/* El indicador de scroll era lo último en pintarse (retardo 1.2s + 0.9s),
+   así que en visitas repetidas se convertía en el elemento LCP a ~2.6s.
+   Entra justo detrás de los CTA: misma lectura secuencial, LCP sano. */
 .hero-scrollhint {
   opacity: 0;
-  transition: opacity 0.9s ease-out 1.2s;
+  transition: opacity 0.7s ease-out 0.55s;
 }
 
 .hero-scrollhint.revealed {
