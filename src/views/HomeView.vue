@@ -399,7 +399,7 @@ onBeforeUnmount(() => {
           class="group relative block h-[60vh] overflow-hidden bg-black transition-transform duration-300 ease-out active:scale-[0.995] md:h-[82vh]"
         >
           <img
-            src="https://ffurplzqeldxzeheetgg.supabase.co/storage/v1/object/public/products/covers/new-arrival.jpg"
+            src="https://ffurplzqeldxzeheetgg.supabase.co/storage/v1/object/public/products/covers/new-arrival-2.jpg"
             alt="New Arrival"
             loading="eager"
             fetchpriority="high"
@@ -469,7 +469,7 @@ onBeforeUnmount(() => {
           class="group relative block h-[60vh] overflow-hidden bg-black transition-transform duration-300 ease-out active:scale-[0.995] md:h-[82vh]"
         >
           <img
-            src="https://ffurplzqeldxzeheetgg.supabase.co/storage/v1/object/public/products/covers/accessories.jpg"
+            src="https://ffurplzqeldxzeheetgg.supabase.co/storage/v1/object/public/products/covers/tailoring.jpg"
             alt="Tailoring & Accessories"
             loading="lazy"
             decoding="async"

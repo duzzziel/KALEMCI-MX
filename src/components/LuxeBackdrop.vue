@@ -3,7 +3,8 @@ import { ref, onMounted, onBeforeUnmount } from 'vue'
 
 // Aura interactiva: un resplandor plateado sigue al cursor con inercia
 // pesada (el CSS transition hace el easing). Con prefers-reduced-motion
-// no se anima nada — ni despertar ni seguimiento.
+// no se anima nada. La apertura del Hero la llevan ahora las ramas de
+// HeroEmbroidery.vue, no esta capa.
 const reduceMotion =
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
@@ -49,11 +50,6 @@ onBeforeUnmount(() => {
       "
     ></div>
 
-    <!-- EL DESPERTAR: floración plateada que se expande y disuelve al cargar
-         (1.8s, una sola vez). Es luz aditiva detrás del contenido — jamás
-         cubre el nombre KALEMCI®. -->
-    <div v-if="!reduceMotion" class="awakening absolute left-1/2 top-1/2 h-[110vh] w-[110vh]"></div>
-
     <!-- Residuo interactivo: aura tenue que persigue al cursor con retardo -->
     <div
       v-if="!reduceMotion"
@@ -93,34 +89,6 @@ onBeforeUnmount(() => {
   }
 }
 
-/* Floración de apertura: expansión + destello suave que se disuelve */
-.awakening {
-  background: radial-gradient(
-    circle,
-    rgba(201, 208, 214, 0.32) 0%,
-    rgba(201, 208, 214, 0.1) 35%,
-    rgba(38, 48, 86, 0.12) 55%,
-    transparent 70%
-  );
-  transform: translate(-50%, -50%) scale(0.4);
-  opacity: 0;
-  animation: awaken 1.8s ease-out forwards;
-}
-
-@keyframes awaken {
-  0% {
-    transform: translate(-50%, -50%) scale(0.4);
-    opacity: 0;
-  }
-  35% {
-    opacity: 0.9;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(1.35);
-    opacity: 0;
-  }
-}
-
 /* Aura que sigue al cursor: el transition de 1.4s le da la inercia etérea */
 .mouse-glow {
   background: radial-gradient(circle, rgba(201, 208, 214, 0.06) 0%, transparent 60%);
@@ -130,7 +98,6 @@ onBeforeUnmount(() => {
 
 @media (prefers-reduced-motion: reduce) {
   .luxe-glow,
-  .awakening,
   .mouse-glow {
     animation: none;
     transition: none;

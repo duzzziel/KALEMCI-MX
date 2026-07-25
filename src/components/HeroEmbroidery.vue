@@ -1,149 +1,124 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
-
-// Ornamento de "bordado en vivo": vides/hojas trazadas a mano en dos
-// esquinas opuestas del Hero (top-left + bottom-right, la misma pieza
-// rotada 180° para simetría diagonal exacta). Se dibujan con
-// stroke-dashoffset sobre pathLength="1" — normaliza la longitud del
-// trazo a 1, así que no hace falta medir cada curva en JS; el navegador
-// hace la interpolación. Tallo primero, luego hojas y florituras en
-// stagger, y un brillo final que asienta la opacidad en reposo (~35%)
-// para no competir con las fotos de producto.
+// Ornamento de "bordado en vivo" en tres actos:
 //
-// Idle state (tras el trazo inicial): un destello recorre el tallo en
-// loop (misma técnica pathLength, dash corto viajando), el grupo
-// respira con un translateY/rotate ínfimo, y el conjunto reacciona al
-// cursor con un paralaje sutil — todo vía transform/opacity para no
-// tocar layout.
+//   1. NACIMIENTO — bajo el bloque central del Hero (justo donde la
+//      hairline crece), un pulso de luz siembra dos zarcillos.
+//   2. RECORRIDO — cada zarcillo viaja como un cometa de hilo plateado
+//      hacia su esquina (top-left / bottom-right) bordeando los márgenes,
+//      sin cruzar jamás el wordmark, tagline ni botones. Es un dash corto
+//      viajando sobre el path (misma técnica pathLength=1), no una línea
+//      persistente: al llegar se desvanece por completo.
+//   3. FLORACIÓN — al aterrizar el zarcillo, el bordado de esa esquina
+//      crece desde su base (stroke-dashoffset), remata con un destello
+//      y se asienta ESTÁTICO en ~38% de opacidad. Después de eso, nada
+//      vuelve a moverse y el centro queda limpio.
+//
+// Todo es stroke-dashoffset / transform / opacity — cero layout, CLS 0.
 defineProps({
   revealed: {
     type: Boolean,
     default: false,
   },
 })
-
-const reduceMotion =
-  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
-const vineTL = ref(null)
-const vineBR = ref(null)
-let ticking = false
-
-// Paralaje: desplazamiento minúsculo (±7px) proporcional a la posición
-// del cursor respecto al centro de la ventana. rAF-throttled como en
-// LuxeBackdrop — un solo listener pasivo, nunca más de un cálculo por frame.
-function onMouseMove(event) {
-  if (ticking) return
-  ticking = true
-  requestAnimationFrame(() => {
-    const nx = event.clientX / window.innerWidth - 0.5
-    const ny = event.clientY / window.innerHeight - 0.5
-    const translate = `translate(${(nx * 14).toFixed(2)}px, ${(ny * 14).toFixed(2)}px)`
-    if (vineTL.value) vineTL.value.style.transform = translate
-    if (vineBR.value) vineBR.value.style.transform = translate
-    ticking = false
-  })
-}
-
-onMounted(() => {
-  if (!reduceMotion) window.addEventListener('mousemove', onMouseMove, { passive: true })
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('mousemove', onMouseMove)
-})
 </script>
 
 <template>
   <div class="embroidery pointer-events-none absolute inset-0" :class="{ 'is-revealed': revealed }" aria-hidden="true">
+    <!-- Acto 1 y 2: semilla + zarcillos viajeros. viewBox normalizado a
+         porcentaje (0-1000) con preserveAspectRatio="none": las rutas se
+         adaptan a cualquier proporción de pantalla. Los trazos usan
+         vector-effect para mantener su grosor real. -->
+    <svg class="runner" viewBox="0 0 1000 1000" preserveAspectRatio="none" fill="none">
+      <circle class="seed" cx="500" cy="690" r="3" />
+      <!-- Sin vector-effect: con preserveAspectRatio="none" el non-scaling-
+           stroke calcula los dashes en espacio de pantalla y rompe la
+           normalización de pathLength (aparecen segmentos repetidos). El
+           grosor va en unidades del viewBox y escala con la pantalla. -->
+      <path
+        class="runner-path runner-tl"
+        pathLength="1"
+        d="M500,690 C380,720 240,715 160,640 C90,560 45,300 25,35"
+      />
+      <path
+        class="runner-path runner-br"
+        pathLength="1"
+        d="M500,690 C600,730 720,720 810,750 C890,780 935,845 960,895"
+      />
+    </svg>
+
+    <!-- Acto 3: los bordados de esquina (florecen cuando llega el zarcillo) -->
     <div class="vine-slot vine-slot-tl">
-      <div class="vine-arrive">
-      <svg ref="vineTL" class="vine" viewBox="0 0 200 260" fill="none">
+      <svg class="vine" viewBox="0 0 200 260" fill="none">
         <g class="vine-group">
           <path
             class="vine-path vine-stem"
-            path-length="1"
+            pathLength="1"
             d="M6,6 C34,-4 62,6 66,32 C70,58 46,74 26,66 C12,60 10,46 22,42 C30,39 36,45 34,52 C62,46 92,62 100,90 C108,116 90,140 66,146 C50,150 36,144 36,132 C44,124 54,128 54,138 C78,140 100,158 106,184 C112,208 98,230 76,238"
           />
           <path
-            class="vine-path vine-leaf"
-            path-length="1"
+            class="vine-path vine-leaf vine-leaf-a"
+            pathLength="1"
             d="M64,22 C74,10 86,2 100,2 C90,16 78,24 64,22 Z"
           />
           <path
-            class="vine-path vine-leaf"
-            path-length="1"
+            class="vine-path vine-leaf vine-leaf-b"
+            pathLength="1"
             d="M98,94 C110,80 124,74 138,76 C126,90 112,98 98,94 Z"
           />
           <path
-            class="vine-path vine-leaf"
-            path-length="1"
+            class="vine-path vine-leaf vine-leaf-c"
+            pathLength="1"
             d="M68,148 C56,160 42,168 28,166 C40,154 54,146 68,148 Z"
           />
           <path
             class="vine-path vine-leaf vine-leaf-corner"
-            path-length="1"
+            pathLength="1"
             d="M10,8 C4,-2 -6,-6 -14,0 C-6,10 4,14 10,8 Z"
           />
           <path
             class="vine-path vine-tendril"
-            path-length="1"
+            pathLength="1"
             d="M108,26 C118,20 120,8 110,4 C102,0 94,6 96,14"
-          />
-          <!-- Idle shimmer: un dash corto recorre el tallo en loop una vez
-               que el trazo inicial terminó — misma técnica pathLength. -->
-          <path
-            class="vine-path vine-shimmer"
-            path-length="1"
-            d="M6,6 C34,-4 62,6 66,32 C70,58 46,74 26,66 C12,60 10,46 22,42 C30,39 36,45 34,52 C62,46 92,62 100,90 C108,116 90,140 66,146 C50,150 36,144 36,132 C44,124 54,128 54,138 C78,140 100,158 106,184 C112,208 98,230 76,238"
           />
         </g>
       </svg>
-      </div>
     </div>
 
     <div class="vine-slot vine-slot-br">
-      <div class="vine-arrive">
-      <svg ref="vineBR" class="vine" viewBox="0 0 200 260" fill="none">
+      <svg class="vine" viewBox="0 0 200 260" fill="none">
         <g class="vine-group">
           <path
             class="vine-path vine-stem"
-            path-length="1"
+            pathLength="1"
             d="M6,6 C34,-4 62,6 66,32 C70,58 46,74 26,66 C12,60 10,46 22,42 C30,39 36,45 34,52 C62,46 92,62 100,90 C108,116 90,140 66,146 C50,150 36,144 36,132 C44,124 54,128 54,138 C78,140 100,158 106,184 C112,208 98,230 76,238"
           />
           <path
-            class="vine-path vine-leaf"
-            path-length="1"
+            class="vine-path vine-leaf vine-leaf-a"
+            pathLength="1"
             d="M64,22 C74,10 86,2 100,2 C90,16 78,24 64,22 Z"
           />
           <path
-            class="vine-path vine-leaf"
-            path-length="1"
+            class="vine-path vine-leaf vine-leaf-b"
+            pathLength="1"
             d="M98,94 C110,80 124,74 138,76 C126,90 112,98 98,94 Z"
           />
           <path
-            class="vine-path vine-leaf"
-            path-length="1"
+            class="vine-path vine-leaf vine-leaf-c"
+            pathLength="1"
             d="M68,148 C56,160 42,168 28,166 C40,154 54,146 68,148 Z"
           />
           <path
             class="vine-path vine-leaf vine-leaf-corner"
-            path-length="1"
+            pathLength="1"
             d="M10,8 C4,-2 -6,-6 -14,0 C-6,10 4,14 10,8 Z"
           />
           <path
             class="vine-path vine-tendril"
-            path-length="1"
+            pathLength="1"
             d="M108,26 C118,20 120,8 110,4 C102,0 94,6 96,14"
-          />
-          <path
-            class="vine-path vine-shimmer"
-            path-length="1"
-            d="M6,6 C34,-4 62,6 66,32 C70,58 46,74 26,66 C12,60 10,46 22,42 C30,39 36,45 34,52 C62,46 92,62 100,90 C108,116 90,140 66,146 C50,150 36,144 36,132 C44,124 54,128 54,138 C78,140 100,158 106,184 C112,208 98,230 76,238"
           />
         </g>
       </svg>
-      </div>
     </div>
   </div>
 </template>
@@ -153,9 +128,93 @@ onBeforeUnmount(() => {
   overflow: hidden;
 }
 
-/* Slot: posición fija en la esquina + (en BR) la rotación 180° estática.
-   Separado del <svg> para que el paralaje JS (transform inline sobre el
-   svg) nunca choque con esta transform de CSS. */
+/* ============ Acto 1: la semilla ============ */
+.runner {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.seed {
+  fill: rgba(220, 228, 235, 0.9);
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.is-revealed .seed {
+  animation: seed-pulse 0.75s ease-out 750ms forwards;
+}
+
+@keyframes seed-pulse {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  35% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(3.2);
+  }
+}
+
+/* ============ Acto 2: zarcillos viajeros ============ */
+/* Cometa: un dash corto (8.5% del recorrido) que viaja del centro a la
+   esquina desplazando el dashoffset. La opacidad lo enciende al partir
+   y lo disuelve al aterrizar — nunca queda línea residual. */
+/* El gap (1.2) excede la longitud normalizada del path (1): así jamás
+   aparece una repetición del dash dentro del tramo visible, ni las tapas
+   redondeadas asoman como puntos sueltos en los extremos. */
+.runner-path {
+  stroke: rgba(214, 222, 229, 0.9);
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  stroke-dasharray: 0.085 1.2;
+  stroke-dashoffset: 0.085;
+  opacity: 0;
+  filter: drop-shadow(0 0 3px rgba(201, 208, 214, 0.6));
+}
+
+.is-revealed .runner-tl {
+  animation:
+    runner-travel 1.15s cubic-bezier(0.45, 0.05, 0.55, 0.95) 850ms forwards,
+    runner-fade 1.5s linear 850ms forwards;
+}
+
+.is-revealed .runner-br {
+  animation:
+    runner-travel 1.15s cubic-bezier(0.45, 0.05, 0.55, 0.95) 970ms forwards,
+    runner-fade 1.5s linear 970ms forwards;
+}
+
+@keyframes runner-travel {
+  from {
+    stroke-dashoffset: 0.085;
+  }
+  to {
+    stroke-dashoffset: -0.915;
+  }
+}
+
+@keyframes runner-fade {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  76% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ============ Acto 3: floración de esquina ============ */
 .vine-slot {
   position: absolute;
   width: clamp(120px, 15vw, 210px);
@@ -173,49 +232,14 @@ onBeforeUnmount(() => {
   transform: rotate(180deg);
 }
 
-/* Llegada: la rama recorre un par de puntos del Hero antes de acomodarse
-   en su posición final (0,0 = donde ya la deja el slot). Vive en su
-   propio wrapper para no chocar con el paralaje (transform inline, JS)
-   ni con la rotación estática del slot BR — cada capa mueve una sola cosa. */
-.vine-arrive {
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  transform: translate(55%, 45%) scale(0.82);
-  will-change: transform, opacity;
-}
-
-.is-revealed .vine-arrive {
-  animation: vine-arrive 1.6s cubic-bezier(0.25, 1, 0.5, 1) 0ms forwards;
-}
-
-@keyframes vine-arrive {
-  0% {
-    transform: translate(55%, 45%) scale(0.82);
-    opacity: 0.35;
-  }
-  35% {
-    transform: translate(20%, 70%) scale(0.9);
-    opacity: 0.7;
-  }
-  65% {
-    transform: translate(60%, 15%) scale(0.95);
-    opacity: 0.85;
-  }
-  100% {
-    transform: translate(0%, 0%) scale(1);
-    opacity: 1;
-  }
-}
-
 .vine {
   display: block;
   width: 100%;
   height: 100%;
-  transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: transform;
 }
 
+/* Mismo criterio anti-puntos: gap 1.2 > 1 y offset inicial 1.1 dejan las
+   tapas redondeadas 10% fuera del tramo visible mientras está oculto. */
 .vine-path {
   fill: none;
   stroke: rgba(201, 208, 214, 0.75);
@@ -223,48 +247,39 @@ onBeforeUnmount(() => {
   stroke-linecap: round;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
+  stroke-dasharray: 1 1.2;
+  stroke-dashoffset: 1.1;
 }
 
 .vine-group {
   opacity: 1;
-  transform-box: fill-box;
-  transform-origin: center;
 }
 
-/* Destello de plata: dash corto que recorre el tallo en loop continuo,
-   solo tras terminar el trazo inicial + el brillo de asentado. */
-.vine-shimmer {
-  stroke: rgba(255, 255, 255, 0.95);
-  stroke-width: 1.5;
-  stroke-dasharray: 0.05 1;
-  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.55));
-}
-
-/* --- Bordado en vivo: tallo primero, luego hojas y florituras --- */
+/* Crecimiento: arranca cuando el zarcillo aterriza en la esquina
+   (~2000ms tras el reveal). Tallo primero, hojas y filigrana en cascada,
+   curva líquida. "forwards" deja todo fijo — estático de ahí en más. */
 .is-revealed .vine-stem {
-  animation: vine-draw 1.6s cubic-bezier(0.25, 1, 0.5, 1) 0ms forwards;
+  animation: vine-draw 1.8s cubic-bezier(0.16, 1, 0.3, 1) 1950ms forwards;
 }
 
-.is-revealed .vine-leaf:nth-of-type(2) {
-  animation: vine-draw 0.55s cubic-bezier(0.25, 1, 0.5, 1) 500ms forwards;
+.is-revealed .vine-leaf-a {
+  animation: vine-draw 0.45s cubic-bezier(0.16, 1, 0.3, 1) 2500ms forwards;
 }
 
-.is-revealed .vine-leaf:nth-of-type(3) {
-  animation: vine-draw 0.55s cubic-bezier(0.25, 1, 0.5, 1) 750ms forwards;
+.is-revealed .vine-leaf-b {
+  animation: vine-draw 0.45s cubic-bezier(0.16, 1, 0.3, 1) 2750ms forwards;
 }
 
-.is-revealed .vine-leaf:nth-of-type(4) {
-  animation: vine-draw 0.55s cubic-bezier(0.25, 1, 0.5, 1) 1000ms forwards;
+.is-revealed .vine-leaf-c {
+  animation: vine-draw 0.45s cubic-bezier(0.16, 1, 0.3, 1) 3000ms forwards;
 }
 
 .is-revealed .vine-leaf-corner {
-  animation: vine-draw 0.5s cubic-bezier(0.25, 1, 0.5, 1) 1150ms forwards;
+  animation: vine-draw 0.4s cubic-bezier(0.16, 1, 0.3, 1) 3200ms forwards;
 }
 
 .is-revealed .vine-tendril {
-  animation: vine-draw 0.5s cubic-bezier(0.25, 1, 0.5, 1) 1300ms forwards;
+  animation: vine-draw 0.4s cubic-bezier(0.16, 1, 0.3, 1) 3350ms forwards;
 }
 
 @keyframes vine-draw {
@@ -273,38 +288,10 @@ onBeforeUnmount(() => {
   }
 }
 
-/* Brillo final: la puntada completa destella y luego la pieza entera se
-   asienta en ~35% de opacidad para quedar como acento, no protagonista.
-   Se combina con la respiración continua (transform) — propiedades
-   distintas, cero conflicto entre ambas animaciones. */
+/* Destello final + asentado en ~38%: el punto final del relato.
+   Ninguna animación corre después de esto. */
 .is-revealed .vine-group {
-  animation:
-    vine-settle 0.85s ease-out 1750ms forwards,
-    vine-breathe 9s ease-in-out 2600ms infinite;
-}
-
-@keyframes vine-breathe {
-  0%,
-  100% {
-    transform: translateY(0) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-3px) rotate(0.4deg);
-  }
-}
-
-/* Idle shimmer: arranca justo cuando termina el destello de asentado */
-.is-revealed .vine-shimmer {
-  animation: vine-shimmer-travel 7s linear 2700ms infinite;
-}
-
-@keyframes vine-shimmer-travel {
-  from {
-    stroke-dashoffset: 1;
-  }
-  to {
-    stroke-dashoffset: -1.05;
-  }
+  animation: vine-settle 0.7s ease-out 3800ms forwards;
 }
 
 @keyframes vine-settle {
@@ -322,8 +309,7 @@ onBeforeUnmount(() => {
   }
 }
 
-/* Móvil: menos trazos, línea más fina, sin destello continuo — evita
-   saturar el encuadre y ahorra batería en pantallas chicas. */
+/* Móvil: menos trazos y líneas más finas — sin saturar el encuadre */
 @media (max-width: 767px) {
   .vine-slot {
     width: clamp(80px, 26vw, 130px);
@@ -333,9 +319,12 @@ onBeforeUnmount(() => {
     stroke-width: 1;
   }
 
+  .runner-path {
+    stroke-width: 1.1;
+  }
+
   .vine-tendril,
-  .vine-leaf-corner,
-  .vine-shimmer {
+  .vine-leaf-corner {
     display: none;
   }
 }
@@ -349,28 +338,21 @@ onBeforeUnmount(() => {
     opacity: 0.38;
   }
 
-  .vine-shimmer {
+  .seed,
+  .runner-path {
     opacity: 0;
   }
 
-  .vine {
-    transition: none;
-  }
-
-  .vine-arrive {
-    opacity: 1;
-    transform: none;
-  }
-
+  .is-revealed .seed,
+  .is-revealed .runner-tl,
+  .is-revealed .runner-br,
   .is-revealed .vine-stem,
-  .is-revealed .vine-leaf:nth-of-type(2),
-  .is-revealed .vine-leaf:nth-of-type(3),
-  .is-revealed .vine-leaf:nth-of-type(4),
+  .is-revealed .vine-leaf-a,
+  .is-revealed .vine-leaf-b,
+  .is-revealed .vine-leaf-c,
   .is-revealed .vine-leaf-corner,
   .is-revealed .vine-tendril,
-  .is-revealed .vine-shimmer,
-  .is-revealed .vine-group,
-  .is-revealed .vine-arrive {
+  .is-revealed .vine-group {
     animation: none;
   }
 }

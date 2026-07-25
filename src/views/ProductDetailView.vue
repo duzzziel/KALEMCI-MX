@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import Navbar from '../components/Navbar.vue'
 import CartDrawer from '../components/CartDrawer.vue'
 import Footer from '../components/Footer.vue'
+import ProductCard from '../components/ProductCard.vue'
 import { supabase } from '../supabase'
 import { addToCart, openCart } from '../store/cart'
 
@@ -12,6 +13,7 @@ const route = useRoute()
 const product = ref(null)
 const loading = ref(true)
 const notFound = ref(false)
+const related = ref([])
 
 const activeImageIndex = ref(0)
 const selectedSize = ref(null)
@@ -78,10 +80,49 @@ function handleAddToCart() {
   openCart()
 }
 
+// --- Productos relacionados ---
+// Se relacionan por tags compartidos: trae todo lo que comparta al menos
+// un tag (operador de solapamiento de arrays en la base) y ordena por
+// cuántos comparte — lo más afín primero, máximo 4 piezas.
+function mapCard(p) {
+  return {
+    id: p.id,
+    name: p.name,
+    price: p.price,
+    image: p.images?.[0] ?? '',
+    hoverImage: p.images?.[1] ?? p.images?.[0] ?? '',
+  }
+}
+
+async function fetchRelated() {
+  related.value = []
+  const tags = product.value?.tags ?? []
+  if (!supabase || tags.length === 0) return
+
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select('id, name, price, images, tags')
+      .neq('id', product.value.id)
+      .overlaps('tags', tags)
+
+    if (error) throw error
+
+    related.value = (data ?? [])
+      .map((p) => ({ ...p, shared: (p.tags ?? []).filter((t) => tags.includes(t)).length }))
+      .sort((a, b) => b.shared - a.shared)
+      .slice(0, 4)
+      .map(mapCard)
+  } catch (error) {
+    console.error('No se pudieron cargar productos relacionados:', error)
+  }
+}
+
 async function fetchProduct() {
   loading.value = true
   notFound.value = false
   product.value = null
+  related.value = []
   activeImageIndex.value = 0
   selectedSize.value = null
   sizeWarning.value = false
@@ -102,6 +143,7 @@ async function fetchProduct() {
     if (error) throw error
 
     product.value = data
+    fetchRelated()
   } catch (error) {
     console.error('No se pudo obtener el producto de Supabase:', error)
     notFound.value = true
@@ -146,11 +188,13 @@ watch(
 
     <main v-else class="grid grid-cols-1 gap-x-10 gap-y-6 px-6 py-10 lg:grid-cols-[13fr_7fr] lg:py-12">
       <div>
-        <div class="relative aspect-[3/4] w-full overflow-hidden bg-white/5 lg:aspect-auto lg:h-[85vh]">
+        <!-- Imagen completa: object-contain sobre un lienzo oscuro — la
+             prenda siempre se ve entera, jamás recortada por el encuadre -->
+        <div class="flex w-full items-center justify-center overflow-hidden bg-white/[0.03] lg:h-[85vh]">
           <img
             :src="mainImage"
             :alt="product.name"
-            class="absolute inset-0 h-full w-full object-cover"
+            class="h-auto max-h-[72vh] w-auto max-w-full object-contain lg:max-h-full"
           />
         </div>
 
@@ -250,6 +294,24 @@ watch(
         </button>
       </div>
     </main>
+
+    <!-- Productos relacionados: curados por tags compartidos -->
+    <section
+      v-if="!loading && product && related.length"
+      class="mx-auto w-full max-w-[1680px] border-t border-white/10 px-6 py-14 2xl:px-10"
+    >
+      <div class="mb-8 flex items-baseline justify-between">
+        <h2 class="font-display text-[clamp(1.4rem,2.4vw,1.9rem)] font-medium uppercase tracking-[0.2em] text-white">
+          Related Pieces
+        </h2>
+        <p class="font-grotesk text-[9px] uppercase tracking-[0.35em] text-white/35">
+          From the same archive
+        </p>
+      </div>
+      <div class="grid grid-cols-2 gap-x-6 gap-y-12 lg:grid-cols-4">
+        <ProductCard v-for="item in related" :key="item.id" :product="item" />
+      </div>
+    </section>
 
     <Footer />
   </div>
