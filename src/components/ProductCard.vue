@@ -1,4 +1,6 @@
 <script setup>
+import { cardImage } from '../lib/images'
+
 const props = defineProps({
   product: {
     type: Object,
@@ -9,25 +11,36 @@ const props = defineProps({
 function formatPrice(value) {
   return `$${value.toFixed(2)}`
 }
+
+// Si la variante -card.webp no existe (producto nuevo sin derivado),
+// se regresa al JPG original — la tarjeta jamás queda rota.
+function fallback(event, original) {
+  if (original && event.target.src !== original) event.target.src = original
+}
 </script>
 
 <template>
   <article class="group">
     <router-link :to="`/product/${product.id}`" class="block">
+      <!-- aspect-ratio rígido + object-top: el encuadre nunca "salta" en
+           móvil y la prenda/modelo siempre entra desde arriba, sin
+           recortes caprichosos por abajo-centro -->
       <div class="relative aspect-[3/4] w-full overflow-hidden bg-white/5">
         <img
-          :src="product.image"
+          :src="cardImage(product.image)"
           :alt="product.name"
           loading="lazy"
           decoding="async"
-          class="absolute inset-0 h-full w-full object-cover transition-all duration-700 ease-out group-hover:scale-[1.04]"
+          class="absolute inset-0 h-full w-full object-cover object-top transition-all duration-700 ease-out group-hover:scale-[1.04]"
+          @error="fallback($event, product.image)"
         />
         <img
-          :src="product.hoverImage"
+          :src="cardImage(product.hoverImage)"
           :alt="product.name"
           loading="lazy"
           decoding="async"
-          class="absolute inset-0 h-full w-full object-cover opacity-0 transition-all duration-700 ease-out group-hover:scale-[1.04] group-hover:opacity-100"
+          class="absolute inset-0 h-full w-full object-cover object-top opacity-0 transition-all duration-700 ease-out group-hover:scale-[1.04] group-hover:opacity-100"
+          @error="fallback($event, product.hoverImage)"
         />
       </div>
 

@@ -155,16 +155,18 @@ onBeforeUnmount(() => {
     <nav class="grid grid-cols-[1fr_auto_1fr] items-center gap-4 px-6 py-5">
       <div class="flex min-w-0 items-center">
         <!-- Hamburguesa: por debajo de xl los links viven en el drawer -->
+        <!-- Barras de 2px con color sólido: las hairlines de 1px se pierden
+             al redondear subpíxeles en WebKit (iOS/Brave) con alta densidad -->
         <button
           type="button"
           aria-label="Menu"
           :aria-expanded="menuOpen"
-          class="flex h-5 w-6 flex-col justify-center gap-[5px] xl:hidden"
+          class="relative z-10 -m-2 flex h-9 w-10 flex-col items-start justify-center gap-[5px] p-2 xl:hidden"
           @click="menuOpen = true"
         >
-          <span class="block h-px w-full bg-white/80"></span>
-          <span class="block h-px w-2/3 bg-white/80"></span>
-          <span class="block h-px w-full bg-white/80"></span>
+          <span class="block h-[2px] w-full rounded-full bg-white"></span>
+          <span class="block h-[2px] w-2/3 rounded-full bg-white"></span>
+          <span class="block h-[2px] w-full rounded-full bg-white"></span>
         </button>
 
         <div class="hidden items-center gap-4 font-grotesk text-[10px] uppercase tracking-[0.15em] xl:flex 2xl:gap-5">

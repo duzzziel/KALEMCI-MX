@@ -4,10 +4,14 @@
 
 /* Alte Haas Grotesk — tipografía de marca (autohospedada, © Yann Le Coroller,
    licencia libre). Solo existen Regular y Bold: los rangos de peso mapean
-   medium→Regular y semibold/bold→Bold sin sintetizar. */
+   medium→Regular y semibold/bold→Bold sin sintetizar.
+   woff2 primero (48KB vs 141KB del ttf); el ttf queda de respaldo para
+   navegadores antiguos. */
 @font-face {
   font-family: 'Alte Haas Grotesk';
-  src: url('/fonts/AlteHaasGroteskRegular.ttf') format('truetype');
+  src:
+    url('/fonts/AlteHaasGroteskRegular.woff2') format('woff2'),
+    url('/fonts/AlteHaasGroteskRegular.ttf') format('truetype');
   font-weight: 100 500;
   font-style: normal;
   font-display: swap;
@@ -15,7 +19,9 @@
 
 @font-face {
   font-family: 'Alte Haas Grotesk';
-  src: url('/fonts/AlteHaasGroteskBold.ttf') format('truetype');
+  src:
+    url('/fonts/AlteHaasGroteskBold.woff2') format('woff2'),
+    url('/fonts/AlteHaasGroteskBold.ttf') format('truetype');
   font-weight: 600 900;
   font-style: normal;
   font-display: swap;

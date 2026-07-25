@@ -126,6 +126,10 @@ defineProps({
 <style scoped>
 .embroidery {
   overflow: hidden;
+  /* stroke-dashoffset repinta por naturaleza (es la técnica del trazo);
+     contain confina esa invalidación a esta capa — el resto del hero
+     (texto, backdrop) no participa en los repintados del bordado. */
+  contain: strict;
 }
 
 /* ============ Acto 1: la semilla ============ */

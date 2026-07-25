@@ -133,9 +133,9 @@ onMounted(async () => {
 //           y convergencia lateral transform-only; tagline abre su tracking.
 //   2100ms  overlay desmontado, scroll liberado.
 //
-// Reglas duras: solo transform/opacity en el título (CLS 0); letter-spacing
-// animado únicamente en el tagline (subpixel). Una vez por sesión; con
-// prefers-reduced-motion no hay intro y todo pinta en estado final.
+// Reglas duras: solo transform/opacity en título y tagline (CLS 0, todo
+// compuesto en GPU). Una vez por sesión; con prefers-reduced-motion no
+// hay intro y todo pinta en estado final.
 const MONOLITH_SEEN_KEY = 'kalemci-monolith-seen'
 const prefersReducedMotion =
   typeof window !== 'undefined' &&
@@ -158,6 +158,18 @@ function letterStyle(index) {
 }
 
 const taglineFragments = ['Curated scarcity', '· Anonymous craft', '· Disruption as form']
+
+// La "apertura de tracking" del tagline es una ilusión por convergencia:
+// cada fragmento nace desplazado hacia el centro (--fx) y se abre a su
+// sitio con transform puro — cero reflow de texto por frame (animar
+// letter-spacing real relayouta el párrafo en cada frame).
+function fragmentStyle(index) {
+  const mid = (taglineFragments.length - 1) / 2
+  return {
+    '--fx': `${((mid - index) * 1.4).toFixed(2)}em`,
+    animationDelay: `${380 + index * 90}ms`,
+  }
+}
 
 let introTimers = []
 
@@ -286,7 +298,8 @@ onBeforeUnmount(() => {
           </span>
         </h1>
 
-        <!-- Tagline: fragmentos con stagger + apertura real de tracking -->
+        <!-- Tagline: fragmentos con stagger; la "apertura de tracking" es
+             convergencia por transform (--fx), no letter-spacing animado -->
         <p
           class="hero-tagline flex flex-wrap justify-center gap-x-3 gap-y-1 font-grotesk text-[9px] uppercase text-silver/50"
         >
@@ -295,7 +308,7 @@ onBeforeUnmount(() => {
             :key="index"
             class="inline-flex overflow-hidden"
           >
-            <span class="hero-fragment inline-block" :style="{ animationDelay: `${380 + index * 90}ms` }">
+            <span class="hero-fragment inline-block" :style="fragmentStyle(index)">
               {{ fragment }}
             </span>
           </span>
@@ -399,7 +412,7 @@ onBeforeUnmount(() => {
           class="group relative block h-[60vh] overflow-hidden bg-black transition-transform duration-300 ease-out active:scale-[0.995] md:h-[82vh]"
         >
           <img
-            src="https://ffurplzqeldxzeheetgg.supabase.co/storage/v1/object/public/products/covers/new-arrival-2.jpg"
+            src="https://ffurplzqeldxzeheetgg.supabase.co/storage/v1/object/public/products/covers/new-arrival-2.webp"
             alt="New Arrival"
             loading="eager"
             fetchpriority="high"
@@ -425,7 +438,7 @@ onBeforeUnmount(() => {
             class="group relative block h-[55vh] overflow-hidden bg-black transition-transform duration-300 ease-out active:scale-[0.995] md:h-[78vh]"
           >
             <img
-              src="https://ffurplzqeldxzeheetgg.supabase.co/storage/v1/object/public/products/covers/men.jpg"
+              src="https://ffurplzqeldxzeheetgg.supabase.co/storage/v1/object/public/products/covers/men.webp"
               alt="Men"
               loading="lazy"
               decoding="async"
@@ -446,7 +459,7 @@ onBeforeUnmount(() => {
             class="group relative block h-[55vh] overflow-hidden bg-black transition-transform duration-300 ease-out active:scale-[0.995] md:h-[78vh]"
           >
             <img
-              src="https://ffurplzqeldxzeheetgg.supabase.co/storage/v1/object/public/products/covers/women.jpg"
+              src="https://ffurplzqeldxzeheetgg.supabase.co/storage/v1/object/public/products/covers/women.webp"
               alt="Women"
               loading="lazy"
               decoding="async"
@@ -469,7 +482,7 @@ onBeforeUnmount(() => {
           class="group relative block h-[60vh] overflow-hidden bg-black transition-transform duration-300 ease-out active:scale-[0.995] md:h-[82vh]"
         >
           <img
-            src="https://ffurplzqeldxzeheetgg.supabase.co/storage/v1/object/public/products/covers/tailoring.jpg"
+            src="https://ffurplzqeldxzeheetgg.supabase.co/storage/v1/object/public/products/covers/tailoring.webp"
             alt="Tailoring & Accessories"
             loading="lazy"
             decoding="async"
@@ -628,27 +641,27 @@ onBeforeUnmount(() => {
   animation: soft-in 0.7s cubic-bezier(0.25, 1, 0.5, 1) 0.62s both;
 }
 
-/* Tagline: fragmentos que emergen + tracking que se abre elegantemente */
+/* Tagline: tracking final estático; la sensación de "apertura" la da la
+   convergencia por transform de cada fragmento (--fx) — compuesto en GPU,
+   sin relayout de texto por frame. */
 .hero-tagline {
-  letter-spacing: 0.18em;
-  transition: letter-spacing 1.5s cubic-bezier(0.25, 1, 0.5, 1) 0.38s;
-}
-
-.hero-content.revealed .hero-tagline {
   letter-spacing: 0.45em;
 }
 
 .hero-content .hero-fragment {
-  transform: translate3d(0, 115%, 0);
+  transform: translate3d(var(--fx, 0), 115%, 0);
 }
 
 .hero-content.revealed .hero-fragment {
-  animation: fragment-rise 0.85s cubic-bezier(0.25, 1, 0.5, 1) both;
+  animation: fragment-rise 1.1s cubic-bezier(0.25, 1, 0.5, 1) both;
 }
 
 @keyframes fragment-rise {
   from {
-    transform: translate3d(0, 115%, 0);
+    transform: translate3d(var(--fx, 0), 115%, 0);
+  }
+  55% {
+    transform: translate3d(calc(var(--fx, 0) * 0.35), 0, 0);
   }
   to {
     transform: translate3d(0, 0, 0);
@@ -734,7 +747,6 @@ onBeforeUnmount(() => {
 
   .cine-focus,
   .cine-veil,
-  .hero-tagline,
   .hero-scrollhint {
     transition: none;
   }

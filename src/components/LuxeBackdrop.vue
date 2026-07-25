@@ -40,15 +40,10 @@ onBeforeUnmount(() => {
     ></div>
 
     <!-- Segundo halo azul desplazado: rompe la simetría y aporta el matiz
-         Blue Depths sin tocar la zona del logo -->
-    <div
-      class="luxe-glow absolute h-[90vh] w-[90vh]"
-      style="
-        top: -25%;
-        right: -12%;
-        background: radial-gradient(circle, rgba(38, 48, 86, 0.5) 0%, transparent 62%);
-      "
-    ></div>
+         Blue Depths sin tocar la zona del logo. Tamaño y tinte viven en la
+         clase (no inline) para poder recortarlos en móvil, donde 90vh
+         cubriría la pantalla entera y teñiría todo el hero de azul. -->
+    <div class="luxe-glow absolute" style="top: -25%; right: -12%"></div>
 
     <!-- Residuo interactivo: aura tenue que persigue al cursor con retardo -->
     <div
@@ -74,7 +69,20 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .luxe-glow {
+  width: 90vh;
+  height: 90vh;
+  background: radial-gradient(circle, rgba(38, 48, 86, 0.5) 0%, transparent 62%);
   animation: luxe-breathe 9s ease-in-out infinite alternate;
+}
+
+/* Móvil: el halo azul se encoge y atenúa — acento de esquina, no tinte
+   de pantalla completa (en iOS el gamut amplio lo saturaba aún más) */
+@media (max-width: 767px) {
+  .luxe-glow {
+    width: 55vh;
+    height: 55vh;
+    background: radial-gradient(circle, rgba(38, 48, 86, 0.24) 0%, transparent 55%);
+  }
 }
 
 /* Respiración casi imperceptible del halo — vida sin distracción */
